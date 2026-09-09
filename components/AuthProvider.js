@@ -37,6 +37,13 @@ export function AuthProvider({ children }) {
     return data.user;
   }, [refresh]);
 
+  const register = useCallback(async (payload) => {
+    const data = await apiPost('/auth/register', payload);
+    setToken(data.token);
+    await refresh();
+    return data.user;
+  }, [refresh]);
+
   const logout = useCallback(() => {
     setToken(null);
     setUser(null);
@@ -50,7 +57,7 @@ export function AuthProvider({ children }) {
     return allowed.has(key);
   }, [user, allowed]);
 
-  const value = { user, roles, allowed, loading, login, logout, refresh, can };
+  const value = { user, roles, allowed, loading, login, register, logout, refresh, can };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

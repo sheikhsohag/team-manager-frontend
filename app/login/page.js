@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
 
 const DEMO = [
@@ -43,10 +44,10 @@ export default function LoginPage() {
     <div className="auth-wrap">
       <div className="auth-card card">
         <div className="auth-logo">
-          <div className="brand-badge">TM</div>
+          <div className="brand-badge">O</div>
           <div>
-            <div className="brand-name" style={{ fontSize: 18 }}>TaskManager</div>
-            <div className="brand-sub">Super Admin &amp; Permission Suite</div>
+            <div className="brand-name" style={{ fontSize: 18 }}>Orbit</div>
+            <div className="brand-sub">Company &amp; Team Management</div>
           </div>
         </div>
         <h2 style={{ marginBottom: 4 }}>Sign in</h2>
@@ -66,6 +67,10 @@ export default function LoginPage() {
             {busy ? <span className="spinner" /> : 'Sign in'}
           </button>
         </form>
+
+        <div className="small muted" style={{ textAlign: 'center', marginTop: 14 }}>
+          New here? <Link href="/register">Create an account</Link>
+        </div>
 
         <div className="divider" />
         <div className="small muted" style={{ marginBottom: 8 }}>Demo accounts</div>

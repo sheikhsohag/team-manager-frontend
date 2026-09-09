@@ -2,8 +2,8 @@ import './globals.css';
 import { AuthProvider } from '@/components/AuthProvider';
 
 export const metadata = {
-  title: 'Task Manager — Admin & Permissions',
-  description: 'Multi-company team & task management with advanced permission control',
+  title: 'Orbit — Company & Team Management',
+  description: 'Manage your company, teams, employees, roles, and permissions from one powerful platform.',
 };
 
 export default function RootLayout({ children }) {

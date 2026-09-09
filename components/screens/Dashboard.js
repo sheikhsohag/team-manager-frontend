@@ -16,8 +16,10 @@ function Stat({ label, value, cls }) {
 }
 
 export default function DashboardScreen() {
-  const { user } = useAuth();
+  const { user, can } = useAuth();
   const isSuper = user.is_super_admin;
+  // "Company" capabilities distinguish a company admin from a solo/individual user.
+  const hasCompany = can('user.view') || can('team.view');
   const [stats, setStats] = useState(null);
   const [recent, setRecent] = useState([]);
 
@@ -39,28 +41,42 @@ export default function DashboardScreen() {
         });
         setRecent(audit.logs || []);
       } else {
-        const [me, users] = await Promise.all([
+        // Individuals can't hit /users — fall back to their own task count.
+        const [me, extra] = await Promise.all([
           apiGet('/me/permissions'),
-          apiGet('/users').catch(() => ({ users: [] })),
+          hasCompany
+            ? apiGet('/users').catch(() => ({ users: [] }))
+            : apiGet('/tasks?scope=mine&top=1').catch(() => ({ tasks: [] })),
         ]);
         setStats({
           allowed: me.summary.allowed,
           denied: me.summary.denied,
           overrides: me.summary.userOverrides,
-          users: users.users.length,
+          fourthLabel: hasCompany ? 'Company users' : 'My tasks',
+          fourthValue: hasCompany ? (extra.users?.length || 0) : (extra.tasks?.length || 0),
         });
       }
     }
     run();
-  }, [isSuper]);
+  }, [isSuper, hasCompany]);
 
   if (!stats) return <Loading />;
+
+  // Quick actions for a non-super user, gated by what they can actually do.
+  const userActions = [];
+  if (hasCompany) userActions.push({ href: '/admin/users', label: '👥 Manage users' });
+  if (can('admin.permissions')) userActions.push({ href: '/admin/permissions', label: '🔑 Permissions' });
+  userActions.push({ href: '/my-tasks', label: '✅ My tasks' });
+  if (can('task.status_manage')) userActions.push({ href: '/admin/statuses', label: '🏷️ Statuses' });
+  if (can('report.view')) userActions.push({ href: '/my-reports', label: '📊 My reports' });
+  if (can('audit.view')) userActions.push({ href: '/admin/audit-logs', label: '📜 Audit logs' });
+  userActions.push({ href: '/my-permissions', label: '🧾 My permissions' });
 
   return (
     <div>
       <div className="mb">
         <h2>Welcome back, {user.name.split(' ')[0]} 👋</h2>
-        <p className="muted small">{isSuper ? 'System-wide overview across all companies.' : 'Your company overview.'}</p>
+        <p className="muted small">{isSuper ? 'System-wide overview across all companies.' : (hasCompany ? 'Your company overview.' : 'Your personal workspace overview.')}</p>
       </div>
 
       <div className="grid grid-4 mb">
@@ -76,7 +92,7 @@ export default function DashboardScreen() {
             <Stat label="My allowed permissions" value={stats.allowed} cls="green" />
             <Stat label="My denied" value={stats.denied} cls="red" />
             <Stat label="My overrides" value={stats.overrides} cls="amber" />
-            <Stat label="Company users" value={stats.users} />
+            <Stat label={stats.fourthLabel} value={stats.fourthValue} />
           </>
         )}
       </div>
@@ -93,12 +109,7 @@ export default function DashboardScreen() {
                 <Link className="btn ghost" href="/super-admin/audit-logs">📜 Audit logs</Link>
               </>
             ) : (
-              <>
-                <Link className="btn ghost" href="/admin/users">👥 Manage users</Link>
-                <Link className="btn ghost" href="/admin/permissions">🔑 Permissions</Link>
-                <Link className="btn ghost" href="/my-tasks">✅ My tasks</Link>
-                <Link className="btn ghost" href="/my-permissions">🧾 My permissions</Link>
-              </>
+              userActions.map((a) => <Link key={a.href} className="btn ghost" href={a.href}>{a.label}</Link>)
             )}
           </div>
         </div>

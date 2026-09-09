@@ -50,18 +50,22 @@ export default function AppShell({ title, children }) {
     if (can('user.view')) items.push({ href: '/admin/users', icon: '👥', label: 'Users' });
     if (can('admin.view')) items.push({ href: '/admin/admins', icon: '🛡️', label: 'Admins' });
     if (can('team.view')) items.push({ href: '/admin/teams', icon: '👨‍👩‍👧', label: 'Teams' });
-    items.push({ href: '/admin/roles', icon: '🎭', label: 'Roles' });
+    if (can('task.view_all')) items.push({ href: '/admin/tasks', icon: '✅', label: 'All Tasks' });
+    if (can('task.status_manage')) items.push({ href: '/admin/statuses', icon: '🏷️', label: 'Statuses' });
+    if (can('user.view')) items.push({ href: '/admin/roles', icon: '🎭', label: 'Roles' });
     if (can('admin.permissions')) items.push({ href: '/admin/permissions', icon: '🔑', label: 'Permissions' });
     if (can('company.permissions')) items.push({ href: '/admin/company-permissions', icon: '🧭', label: 'Company Policy' });
     if (can('report.view')) items.push({ href: '/admin/reports', icon: '📊', label: 'Reports' });
     if (can('audit.view')) items.push({ href: '/admin/audit-logs', icon: '📜', label: 'Audit Logs' });
-    sections.push({ label: 'Company', items });
+    // Solo/individual workspaces have no company-management capabilities.
+    const isSolo = !can('user.view') && !can('team.view');
+    sections.push({ label: isSolo ? 'Workspace' : 'Company', items });
 
     const meItems = [
       { href: '/my-tasks', icon: '✅', label: 'My Tasks' },
-      { href: '/my-team', icon: '👥', label: 'My Team' },
-      { href: '/my-permissions', icon: '🧾', label: 'My Permissions' },
     ];
+    if (can('team.view')) meItems.push({ href: '/my-team', icon: '👥', label: 'My Team' });
+    meItems.push({ href: '/my-permissions', icon: '🧾', label: 'My Permissions' });
     if (can('report.view')) meItems.push({ href: '/my-reports', icon: '📊', label: 'My Reports' });
     sections.push({ label: 'Me', items: meItems });
   }
@@ -73,10 +77,10 @@ export default function AppShell({ title, children }) {
       <div className="app">
         <aside className="sidebar">
           <div className="brand">
-            <div className="brand-badge">TM</div>
+            <div className="brand-badge">O</div>
             <div>
-              <div className="brand-name">TaskManager</div>
-              <div className="brand-sub">Permission Suite</div>
+              <div className="brand-name">Orbit</div>
+              <div className="brand-sub">Company &amp; Team Management</div>
             </div>
           </div>
           {sections.map((sec) => (
