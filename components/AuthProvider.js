@@ -6,6 +6,14 @@ import { api, apiPost } from '@/lib/api';
 
 const AuthContext = createContext(null);
 
+/** Where a user should land after auth: individuals go straight to their tasks. */
+export function homeFor(user) {
+  if (!user) return '/login';
+  if (user.is_super_admin) return '/super-admin/dashboard';
+  if (user.company_type === 'individual') return '/my-tasks';
+  return '/dashboard';
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [roles, setRoles] = useState([]);

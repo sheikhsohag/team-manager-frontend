@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
 import { ToastProvider } from '@/components/ui';
+import StickyNotes from '@/components/StickyNotes';
+import ThemeToggle from '@/components/ThemeToggle';
 
 function NavItem({ href, icon, label, active }) {
   return (
@@ -19,6 +21,7 @@ export default function AppShell({ title, children }) {
   const { user, roles, loading, logout, can } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+  const [notesOpen, setNotesOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) router.replace('/login');
@@ -28,6 +31,7 @@ export default function AppShell({ title, children }) {
   if (!user) return null;
 
   const isSuper = user.is_super_admin;
+  const isIndividual = !isSuper && user.company_type === 'individual';
 
   // Build nav sections based on identity + permissions
   const sections = [];
@@ -70,7 +74,11 @@ export default function AppShell({ title, children }) {
     sections.push({ label: 'Me', items: meItems });
   }
 
-  const roleLabel = isSuper ? 'Super Admin' : (roles.map((r) => r.name).join(', ') || 'User');
+  const roleLabel = isSuper
+    ? 'Super Admin'
+    : isIndividual
+      ? 'Individual'
+      : (roles.map((r) => r.name).join(', ') || 'User');
 
   return (
     <ToastProvider>
@@ -91,6 +99,14 @@ export default function AppShell({ title, children }) {
               ))}
             </div>
           ))}
+
+          <div>
+            <div className="nav-group-label">Tools</div>
+            <button type="button" className="nav-item" onClick={() => setNotesOpen(true)}>
+              <span className="ico">🗒️</span>
+              <span>Sticky Notes</span>
+            </button>
+          </div>
         </aside>
 
         <div className="main">
@@ -104,12 +120,14 @@ export default function AppShell({ title, children }) {
               <div className="brand-badge" title={user.email}>
                 {user.name.slice(0, 1).toUpperCase()}
               </div>
+              <ThemeToggle />
               <button className="btn sm ghost" onClick={logout}>Logout</button>
             </div>
           </div>
           <div className="content">{children}</div>
         </div>
       </div>
+      <StickyNotes open={notesOpen} onClose={() => setNotesOpen(false)} userId={user.id} />
     </ToastProvider>
   );
 }

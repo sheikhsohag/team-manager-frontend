@@ -8,7 +8,15 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="dark" suppressHydrationWarning>
+      <head>
+        {/* Apply the saved theme before first paint to avoid a flash. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: "try{var t=localStorage.getItem('orbit.theme')||'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){}",
+          }}
+        />
+      </head>
       <body>
         <AuthProvider>{children}</AuthProvider>
       </body>

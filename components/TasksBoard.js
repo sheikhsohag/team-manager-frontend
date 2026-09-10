@@ -9,7 +9,10 @@ import TaskDetail, { StatusPill } from '@/components/TaskDetail';
 const EMPTY_FILTERS = { q: '', statusId: '', assigneeId: '', from: '', to: '' };
 
 export default function TasksBoard({ scope = 'mine' }) {
-  const { can } = useAuth();
+  const { can, user } = useAuth();
+  // A solo/individual workspace has no teammates and no teams, so assigning a
+  // task to someone (or a team) is meaningless — hide those controls.
+  const isIndividual = user?.company_type === 'individual';
   const toast = useToast();
   const [tasks, setTasks] = useState([]);
   const [statuses, setStatuses] = useState([]);
@@ -63,7 +66,7 @@ export default function TasksBoard({ scope = 'mine' }) {
           {!showCreate ? (
             <button className="btn primary" onClick={() => setShowCreate(true)}>+ New Task</button>
           ) : (
-            <CreateTask statuses={statuses} members={members} teams={teams}
+            <CreateTask statuses={statuses} members={members} teams={teams} isIndividual={isIndividual}
               onDone={() => { setShowCreate(false); load(); }} onCancel={() => setShowCreate(false)} />
           )}
         </div>
@@ -83,13 +86,15 @@ export default function TasksBoard({ scope = 'mine' }) {
               {statuses.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </label>
-          <label className="field" style={{ margin: 0 }}>
-            <span>{scope === 'all' ? 'Member' : 'Person'}</span>
-            <select className="select" value={filters.assigneeId} onChange={(e) => setFilters({ ...filters, assigneeId: e.target.value })}>
-              <option value="">All</option>
-              {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-            </select>
-          </label>
+          {!isIndividual && (
+            <label className="field" style={{ margin: 0 }}>
+              <span>{scope === 'all' ? 'Member' : 'Person'}</span>
+              <select className="select" value={filters.assigneeId} onChange={(e) => setFilters({ ...filters, assigneeId: e.target.value })}>
+                <option value="">All</option>
+                {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+              </select>
+            </label>
+          )}
           <label className="field" style={{ margin: 0 }}>
             <span>From</span>
             <input className="input" type="date" value={filters.from} onChange={(e) => setFilters({ ...filters, from: e.target.value })} />
@@ -140,7 +145,7 @@ export default function TasksBoard({ scope = 'mine' }) {
   );
 }
 
-function CreateTask({ statuses, members, teams, onDone, onCancel }) {
+function CreateTask({ statuses, members, teams, isIndividual, onDone, onCancel }) {
   const toast = useToast();
   const [f, setF] = useState({ title: '', heading: '', description: '', statusId: '', priority: 'medium', assigneeId: '', teamId: '', dueDate: '' });
   const [busy, setBusy] = useState(false);
@@ -177,18 +182,22 @@ function CreateTask({ statuses, members, teams, onDone, onCancel }) {
             {['low', 'medium', 'high', 'urgent'].map((p) => <option key={p} value={p}>{p}</option>)}
           </select>
         </label>
-        <label className="field"><span>Assignee</span>
-          <select className="select" value={f.assigneeId} onChange={(e) => setF({ ...f, assigneeId: e.target.value })}>
-            <option value="">Unassigned</option>
-            {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-          </select>
-        </label>
-        <label className="field"><span>Team</span>
-          <select className="select" value={f.teamId} onChange={(e) => setF({ ...f, teamId: e.target.value })}>
-            <option value="">None</option>
-            {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-          </select>
-        </label>
+        {!isIndividual && (
+          <label className="field"><span>Assignee</span>
+            <select className="select" value={f.assigneeId} onChange={(e) => setF({ ...f, assigneeId: e.target.value })}>
+              <option value="">Unassigned</option>
+              {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+            </select>
+          </label>
+        )}
+        {!isIndividual && (
+          <label className="field"><span>Team</span>
+            <select className="select" value={f.teamId} onChange={(e) => setF({ ...f, teamId: e.target.value })}>
+              <option value="">None</option>
+              {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+            </select>
+          </label>
+        )}
         <label className="field"><span>Due date</span><input className="input" type="date" value={f.dueDate} onChange={(e) => setF({ ...f, dueDate: e.target.value })} /></label>
       </div>
       <button className="btn primary" onClick={submit} disabled={busy}>{busy ? <span className="spinner" /> : 'Create task'}</button>

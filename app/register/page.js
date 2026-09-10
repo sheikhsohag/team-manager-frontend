@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/components/AuthProvider';
+import { useAuth, homeFor } from '@/components/AuthProvider';
 
 export default function RegisterPage() {
   const { register, user, loading } = useAuth();
@@ -17,9 +17,7 @@ export default function RegisterPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) {
-      router.replace(user.is_super_admin ? '/super-admin/dashboard' : '/dashboard');
-    }
+    if (!loading && user) router.replace(homeFor(user));
   }, [user, loading, router]);
 
   async function submit(e) {
@@ -29,7 +27,7 @@ export default function RegisterPage() {
     setBusy(true);
     try {
       const u = await register({ name, email, password, accountType, companyName: accountType === 'company' ? companyName : null });
-      router.replace(u.is_super_admin ? '/super-admin/dashboard' : '/dashboard');
+      router.replace(homeFor(u));
     } catch (err) {
       setError(err.message || 'Registration failed');
     } finally {

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/components/AuthProvider';
+import { useAuth, homeFor } from '@/components/AuthProvider';
 
 const DEMO = [
   { label: 'Super Admin', email: 'superadmin@example.com', pass: 'ChangeMe@123' },
@@ -21,9 +21,7 @@ export default function LoginPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) {
-      router.replace(user.is_super_admin ? '/super-admin/dashboard' : '/dashboard');
-    }
+    if (!loading && user) router.replace(homeFor(user));
   }, [user, loading, router]);
 
   async function submit(e) {
@@ -32,7 +30,7 @@ export default function LoginPage() {
     setBusy(true);
     try {
       const u = await login(email, password);
-      router.replace(u.is_super_admin ? '/super-admin/dashboard' : '/dashboard');
+      router.replace(homeFor(u));
     } catch (err) {
       setError(err.message || 'Login failed');
     } finally {

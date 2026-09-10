@@ -6,6 +6,9 @@ import { apiGet } from '@/lib/api';
 import { useAuth } from '@/components/AuthProvider';
 import { Loading } from '@/components/ui';
 
+const TEAM_ROLE_LABEL = { lead: 'Lead', assistant_lead: 'Assistant Lead', member: 'Member' };
+const TEAM_ROLE_BADGE = { lead: 'green', assistant_lead: 'blue', member: 'grey' };
+
 function Stat({ label, value, cls }) {
   return (
     <div className="card stat">
@@ -18,10 +21,19 @@ function Stat({ label, value, cls }) {
 export default function DashboardScreen() {
   const { user, can } = useAuth();
   const isSuper = user.is_super_admin;
+  // A solo/individual workspace has no company or teams to show.
+  const isIndividual = user.company_type === 'individual';
   // "Company" capabilities distinguish a company admin from a solo/individual user.
   const hasCompany = can('user.view') || can('team.view');
   const [stats, setStats] = useState(null);
   const [recent, setRecent] = useState([]);
+  const [myTeams, setMyTeams] = useState([]);
+
+  // Company members (not solo individuals) see their company + team memberships.
+  useEffect(() => {
+    if (isSuper || isIndividual) return;
+    apiGet('/me/teams').then((r) => setMyTeams(r.teams || [])).catch(() => setMyTeams([]));
+  }, [isSuper, isIndividual]);
 
   useEffect(() => {
     async function run() {
@@ -124,6 +136,30 @@ export default function DashboardScreen() {
                   <div className="small muted">{new Date(l.created_at).toLocaleDateString()}</div>
                 </div>
               )) : <div className="muted small">No recent activity.</div>}
+            </div>
+          </div>
+        )}
+
+        {!isSuper && !isIndividual && (
+          <div className="card">
+            <div className="card-title">Your workspace</div>
+            <div className="mt">
+              <div className="spread" style={{ padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+                <span className="muted small">Company</span>
+                <strong>{user.company_name || '—'}</strong>
+              </div>
+              <div style={{ paddingTop: 12 }}>
+                <div className="muted small mb">Your teams</div>
+                {myTeams.length ? (
+                  <div className="row wrap" style={{ gap: 6 }}>
+                    {myTeams.map((t) => (
+                      <span key={t.id} className={`badge ${TEAM_ROLE_BADGE[t.role_in_team] || 'grey'}`}>
+                        {t.name} · {TEAM_ROLE_LABEL[t.role_in_team] || t.role_in_team}
+                      </span>
+                    ))}
+                  </div>
+                ) : <div className="muted small">You&apos;re not a member of any team yet.</div>}
+              </div>
             </div>
           </div>
         )}

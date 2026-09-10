@@ -213,3 +213,80 @@ table.tbl tbody tr:last-child { border-bottom: none; }
 .searchbox { position: relative; }
 .searchbox input { padding-left: 34px; }
 .searchbox .si { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--muted-2); }
+
+/* ---------- Sticky notes ---------- */
+/* Let a <button> act as a sidebar nav item (used by the Sticky Notes trigger). */
+button.nav-item { width: 100%; border: none; background: transparent; text-align: left; font: inherit; }
+
+.sticky-fullscreen {
+  position: fixed; inset: 0; z-index: 60;
+  background: radial-gradient(1200px 600px at 80% -10%, #1a2450 0%, var(--bg) 55%);
+  display: flex; flex-direction: column; animation: pop .18s ease;
+}
+.sticky-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 16px 24px; border-bottom: 1px solid var(--border);
+  background: rgba(10, 14, 30, .6); backdrop-filter: blur(6px);
+}
+.sticky-title { font-size: 18px; font-weight: 700; }
+.sticky-board { flex: 1; position: relative; overflow: auto; }
+.sticky-note {
+  position: absolute; width: 232px; min-height: 200px;
+  border-radius: 12px; padding: 6px 10px 10px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .35);
+  display: flex; flex-direction: column; transition: box-shadow .12s;
+}
+.sticky-note:hover { box-shadow: 0 16px 32px rgba(0, 0, 0, .45); }
+.sticky-note-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  height: 22px; cursor: grab; touch-action: none; user-select: none;
+}
+.sticky-note-bar:active { cursor: grabbing; }
+.sticky-grip { font-size: 15px; line-height: 1; opacity: .35; }
+/* Colour / delete controls stay hidden until the note is hovered. */
+.sticky-actions { display: flex; gap: 4px; opacity: 0; transition: opacity .12s; }
+.sticky-note:hover .sticky-actions { opacity: 1; }
+.sticky-actions button {
+  border: none; background: rgba(0, 0, 0, .08); cursor: pointer; border-radius: 7px;
+  width: 26px; height: 26px; font-size: 13px; line-height: 1;
+}
+.sticky-actions button:hover { background: rgba(0, 0, 0, .18); }
+.sticky-note textarea {
+  flex: 1; resize: none; border: none; background: transparent; outline: none;
+  color: inherit; font-size: 14px; line-height: 1.5; padding: 6px 4px; font-weight: 500; cursor: text;
+}
+.sticky-note textarea::placeholder { color: rgba(0, 0, 0, .4); }
+.sticky-empty {
+  flex: 1; display: grid; place-content: center; justify-items: center;
+  gap: 12px; text-align: center;
+}
+
+/* ---------- Light theme ---------- */
+/* Dark is the default (:root above). Light overrides the palette + the few
+   places that hardcode dark surfaces. Toggle sets <html data-theme="light">. */
+:root[data-theme="light"] {
+  --bg: #eef1f8;
+  --bg-soft: #ffffff;
+  --panel: #ffffff;
+  --panel-2: #f1f4fb;
+  --border: #dbe2f1;
+  --text: #1b2338;
+  --muted: #566486;
+  --muted-2: #8a95af;
+  --primary: #4361ee;
+  --primary-2: #3a51d4;
+  --shadow: 0 10px 30px rgba(30, 45, 90, 0.10);
+}
+:root[data-theme="light"] body {
+  background: radial-gradient(1200px 600px at 80% -10%, #dfe6fb 0%, #eef1f8 55%) fixed;
+}
+:root[data-theme="light"] .input,
+:root[data-theme="light"] .select,
+:root[data-theme="light"] .check { background: #f7f9fe; }
+:root[data-theme="light"] .toggle { background: #c6cee2; }
+:root[data-theme="light"] .topbar { background: rgba(255, 255, 255, 0.72); }
+:root[data-theme="light"] table.tbl tbody tr:hover { background: rgba(67, 97, 238, 0.06); }
+:root[data-theme="light"] .sticky-fullscreen {
+  background: radial-gradient(1200px 600px at 80% -10%, #dfe6fb 0%, #eef1f8 55%);
+}
+:root[data-theme="light"] .sticky-head { background: rgba(255, 255, 255, 0.72); }
