@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { api, apiPost, setToken, getToken } from '@/lib/api';
+import { api, apiPost } from '@/lib/api';
 
 const AuthContext = createContext(null);
 
@@ -14,14 +14,14 @@ export function AuthProvider({ children }) {
   const router = useRouter();
 
   const refresh = useCallback(async () => {
-    if (!getToken()) { setUser(null); setLoading(false); return; }
+    // The auth token lives in an httpOnly cookie the browser sends automatically.
+    // JS can't read it, so we just ask the server who we are; a 401 means "logged out".
     try {
       const data = await api('/auth/me');
       setUser(data.user);
       setRoles(data.roles || []);
       setAllowed(new Set(data.allowedKeys || []));
     } catch {
-      setToken(null);
       setUser(null);
     } finally {
       setLoading(false);
@@ -31,21 +31,21 @@ export function AuthProvider({ children }) {
   useEffect(() => { refresh(); }, [refresh]);
 
   const login = useCallback(async (email, password) => {
+    // Server sets the httpOnly auth cookie on success; nothing to store here.
     const data = await apiPost('/auth/login', { email, password });
-    setToken(data.token);
     await refresh();
     return data.user;
   }, [refresh]);
 
   const register = useCallback(async (payload) => {
     const data = await apiPost('/auth/register', payload);
-    setToken(data.token);
     await refresh();
     return data.user;
   }, [refresh]);
 
-  const logout = useCallback(() => {
-    setToken(null);
+  const logout = useCallback(async () => {
+    // Ask the server to clear the httpOnly cookie — JS can't remove it itself.
+    try { await apiPost('/auth/logout', {}); } catch {}
     setUser(null);
     setAllowed(new Set());
     router.push('/login');

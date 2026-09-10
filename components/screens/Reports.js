@@ -1,11 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { apiGet, apiPost, getToken } from '@/lib/api';
+import { apiGet, apiPost, apiBase } from '@/lib/api';
 import { Loading, useToast } from '@/components/ui';
 import { useAuth } from '@/components/AuthProvider';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 
 export default function ReportsScreen() {
   const toast = useToast();
@@ -25,7 +23,7 @@ export default function ReportsScreen() {
   }
   async function exportCsv() {
     try {
-      const res = await fetch(`${API_URL}/reports/export`, { headers: { Authorization: `Bearer ${getToken()}` } });
+      const res = await fetch(`${apiBase()}/reports/export`, { credentials: 'include' });
       if (!res.ok) { const j = await res.json().catch(() => ({})); throw new Error(j.message || j.error || 'Export failed'); }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
