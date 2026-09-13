@@ -98,12 +98,14 @@ export default function StickyNotes({ open, onClose, userId }) {
   const bringToFront = (id) =>
     setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, z: zTop.current++ } : n)));
 
-  const startDrag = (e, n) => {
+  const onNotePointerDown = (e, n) => {
+    bringToFront(n.id);
+    // Don't start a drag from interactive controls (colour swatches, delete, text).
+    if (e.target.closest('button, textarea')) return;
     const board = boardRef.current;
     if (!board) return;
     const rect = board.getBoundingClientRect();
     drag.current = { id: n.id, dx: e.clientX - rect.left - n.x, dy: e.clientY - rect.top - n.y };
-    bringToFront(n.id);
   };
 
   const addNote = () => {
@@ -117,14 +119,8 @@ export default function StickyNotes({ open, onClose, userId }) {
   const updateNote = (id, text) =>
     setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, text } : n)));
   const removeNote = (id) => setNotes((prev) => prev.filter((n) => n.id !== id));
-  const cycleColor = (id) =>
-    setNotes((prev) => prev.map((n) => {
-      if (n.id !== id) return n;
-      const idx = COLORS.findIndex((c) => c.bg === n.color?.bg);
-      return { ...n, color: COLORS[(idx + 1) % COLORS.length] };
-    }));
-
-  const stop = (e) => e.stopPropagation();
+  const setColor = (id, color) =>
+    setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, color } : n)));
 
   return (
     <div className="sticky-fullscreen">
@@ -154,14 +150,22 @@ export default function StickyNotes({ open, onClose, userId }) {
               className="sticky-note"
               key={n.id}
               style={{ left: n.x, top: n.y, zIndex: n.z, background: n.color?.bg, color: n.color?.fg }}
-              onPointerDown={() => bringToFront(n.id)}
+              onPointerDown={(e) => onNotePointerDown(e, n)}
             >
-              <div className="sticky-note-bar" onPointerDown={(e) => startDrag(e, n)}>
-                <span className="sticky-grip" title="Drag to move">⠿</span>
-                <div className="sticky-actions">
-                  <button type="button" title="Change color" onPointerDown={stop} onClick={() => cycleColor(n.id)}>🎨</button>
-                  <button type="button" title="Delete" onPointerDown={stop} onClick={() => removeNote(n.id)}>🗑️</button>
+              <div className="sticky-note-bar">
+                <div className="sticky-swatches">
+                  {COLORS.map((c) => (
+                    <button
+                      key={c.bg}
+                      type="button"
+                      className={`sticky-swatch ${n.color?.bg === c.bg ? 'sel' : ''}`}
+                      style={{ background: c.bg }}
+                      title="Set colour"
+                      onClick={() => setColor(n.id, c)}
+                    />
+                  ))}
                 </div>
+                <button type="button" className="sticky-del" title="Delete" onClick={() => removeNote(n.id)}>🗑️</button>
               </div>
               <textarea
                 value={n.text}

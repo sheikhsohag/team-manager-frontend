@@ -123,6 +123,16 @@ input, button, select, textarea { font: inherit; }
 label.field { display: block; margin-bottom: 12px; }
 label.field > span { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
 
+/* Inline status dropdown (task list + task detail) */
+.status-select { position: relative; display: inline-flex; align-items: center; }
+.status-select .status-dot {
+  position: absolute; left: 10px; width: 9px; height: 9px; border-radius: 50%; pointer-events: none;
+}
+.select.status-select-input {
+  width: auto; min-width: 128px; padding: 5px 26px 5px 24px;
+  font-size: 12.5px; font-weight: 600; border-radius: 8px; cursor: pointer;
+}
+
 /* ---------- Badges ---------- */
 .badge {
   display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px;
@@ -234,26 +244,34 @@ button.nav-item { width: 100%; border: none; background: transparent; text-align
   position: absolute; width: 232px; min-height: 200px;
   border-radius: 12px; padding: 6px 10px 10px;
   box-shadow: 0 10px 24px rgba(0, 0, 0, .35);
-  display: flex; flex-direction: column; transition: box-shadow .12s;
+  display: flex; flex-direction: column;
+  cursor: grab; touch-action: none; transition: box-shadow .12s;
 }
+.sticky-note:active { cursor: grabbing; }
 .sticky-note:hover { box-shadow: 0 16px 32px rgba(0, 0, 0, .45); }
 .sticky-note-bar {
   display: flex; align-items: center; justify-content: space-between;
-  height: 22px; cursor: grab; touch-action: none; user-select: none;
+  gap: 6px; height: 20px; margin-bottom: 2px; user-select: none;
 }
-.sticky-note-bar:active { cursor: grabbing; }
-.sticky-grip { font-size: 15px; line-height: 1; opacity: .35; }
-/* Colour / delete controls stay hidden until the note is hovered. */
-.sticky-actions { display: flex; gap: 4px; opacity: 0; transition: opacity .12s; }
-.sticky-note:hover .sticky-actions { opacity: 1; }
-.sticky-actions button {
+/* Colour swatches sit spread across the top of the note, always visible. */
+.sticky-swatches { display: flex; align-items: center; gap: 5px; }
+.sticky-swatch {
+  width: 15px; height: 15px; border-radius: 50%; padding: 0; cursor: pointer;
+  border: 1.5px solid rgba(0, 0, 0, .18); transition: transform .1s;
+}
+.sticky-swatch:hover { transform: scale(1.18); }
+.sticky-swatch.sel { border-color: rgba(0, 0, 0, .6); box-shadow: 0 0 0 2px rgba(255, 255, 255, .7) inset; }
+.sticky-del {
   border: none; background: rgba(0, 0, 0, .08); cursor: pointer; border-radius: 7px;
-  width: 26px; height: 26px; font-size: 13px; line-height: 1;
+  width: 24px; height: 22px; font-size: 12px; line-height: 1;
+  opacity: 0; transition: opacity .12s;
 }
-.sticky-actions button:hover { background: rgba(0, 0, 0, .18); }
+.sticky-note:hover .sticky-del { opacity: 1; }
+.sticky-del:hover { background: rgba(0, 0, 0, .18); }
 .sticky-note textarea {
   flex: 1; resize: none; border: none; background: transparent; outline: none;
-  color: inherit; font-size: 14px; line-height: 1.5; padding: 6px 4px; font-weight: 500; cursor: text;
+  color: inherit; font-size: 14px; line-height: 1.5; padding: 6px 4px; font-weight: 500;
+  cursor: text; touch-action: auto;
 }
 .sticky-note textarea::placeholder { color: rgba(0, 0, 0, .4); }
 .sticky-empty {

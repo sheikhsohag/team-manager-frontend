@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { apiGet, apiPost, apiDelete } from '@/lib/api';
 import { useAuth } from '@/components/AuthProvider';
 import { Loading, useToast } from '@/components/ui';
-import TaskDetail, { StatusPill } from '@/components/TaskDetail';
+import TaskDetail, { StatusSelect } from '@/components/TaskDetail';
 
 const EMPTY_FILTERS = { q: '', statusId: '', assigneeId: '', from: '', to: '' };
 
@@ -43,11 +43,9 @@ export default function TasksBoard({ scope = 'mine' }) {
     apiGet('/teams').then((r) => setTeams(r.teams || [])).catch(() => setTeams([]));
   }, []);
 
-  async function cycleStatus(t) {
-    if (!can('task.change_status') || !statuses.length) return;
-    const idx = statuses.findIndex((s) => String(s.id) === String(t.status_id));
-    const next = statuses[(idx + 1) % statuses.length];
-    try { await apiPost(`/tasks/${t.id}/status`, { statusId: next.id }); load(); }
+  async function changeStatus(t, statusId) {
+    if (!statusId || String(statusId) === String(t.status_id)) return;
+    try { await apiPost(`/tasks/${t.id}/status`, { statusId }); load(); }
     catch (e) { toast(e.message, 'err'); }
   }
   async function del(t) {
@@ -127,7 +125,8 @@ export default function TasksBoard({ scope = 'mine' }) {
                 </div>
                 <div className="row" style={{ gap: 8 }} onClick={(e) => e.stopPropagation()}>
                   <span className={`badge ${t.priority === 'urgent' || t.priority === 'high' ? 'red' : t.priority === 'low' ? 'grey' : 'amber'}`}>{t.priority}</span>
-                  <StatusPill status={t.status_name} color={t.status_color} clickable={can('task.change_status')} onClick={() => cycleStatus(t)} />
+                  <StatusSelect statusId={t.status_id} statusName={t.status_name} statuses={statuses}
+                    color={t.status_color} disabled={!can('task.change_status')} onChange={(id) => changeStatus(t, id)} />
                   {can('task.delete') && <button className="btn sm danger" onClick={() => del(t)}>Delete</button>}
                 </div>
               </div>

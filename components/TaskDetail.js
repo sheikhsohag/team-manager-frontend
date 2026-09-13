@@ -18,6 +18,35 @@ export function StatusPill({ status, color, onClick, clickable }) {
   );
 }
 
+// Maps a status badge-class (grey/blue/amber/green/red/purple) to a real colour
+// for the little dot shown beside the dropdown.
+const STATUS_DOT = {
+  green: 'var(--green)', red: 'var(--red)', amber: 'var(--amber)',
+  purple: 'var(--purple)', blue: '#60a5fa', grey: 'var(--muted-2)',
+};
+
+/**
+ * Status shown as a dropdown you can pick from directly. Falls back to a
+ * read-only pill when the user can't change status (or there are no statuses).
+ */
+export function StatusSelect({ statusId, statusName, statuses = [], color, disabled, onChange }) {
+  if (disabled || !statuses.length) return <StatusPill status={statusName} color={color} />;
+  return (
+    <span className="status-select" onClick={(e) => e.stopPropagation()}>
+      <span className="status-dot" style={{ background: STATUS_DOT[color] || 'var(--muted-2)' }} />
+      <select
+        className="select status-select-input"
+        value={statusId ? String(statusId) : ''}
+        onChange={(e) => onChange(e.target.value)}
+        title="Change status"
+      >
+        {!statusId && <option value="">No status</option>}
+        {statuses.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+      </select>
+    </span>
+  );
+}
+
 function fmtBytes(n) {
   if (!n) return '0 B';
   const u = ['B', 'KB', 'MB', 'GB']; let i = 0; let v = Number(n);
@@ -110,13 +139,9 @@ export default function TaskDetail({ taskId, statuses = [], members = [], onClos
         {/* Header / status */}
         <div className="spread wrap" style={{ gap: 8 }}>
           <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-            <StatusPill status={t.status_name} color={t.status_color}
-              clickable={can('task.change_status') && statuses.length > 0}
-              onClick={() => {
-                const idx = statuses.findIndex((s) => String(s.id) === String(t.status_id));
-                const next = statuses[(idx + 1) % statuses.length];
-                if (next) setStatus(next.id);
-              }} />
+            <StatusSelect statusId={t.status_id} statusName={t.status_name} statuses={statuses}
+              color={t.status_color} disabled={!can('task.change_status')}
+              onChange={(id) => setStatus(id)} />
             <span className={`badge ${t.priority === 'urgent' || t.priority === 'high' ? 'red' : t.priority === 'low' ? 'grey' : 'amber'}`}>{t.priority}</span>
             {t.team_name && <span className="badge grey">👥 {t.team_name}</span>}
             {t.due_date && <span className="badge grey">📅 {String(t.due_date).slice(0, 10)}</span>}
